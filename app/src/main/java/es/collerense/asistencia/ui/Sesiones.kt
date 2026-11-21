@@ -2,6 +2,8 @@
 
 package es.collerense.asistencia.ui
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -62,9 +62,9 @@ fun PantallaSesiones(repo: Repo, onAbrir: (String) -> Unit, onNuevaSesion: () ->
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { mes = mes.minusMonths(1) }) { Icon(Icons.Filled.KeyboardArrowLeft, "Mes anterior") }
+            IconButton(onClick = { mes = mes.minusMonths(1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Mes anterior") }
             Text("${MESES[mes.monthValue - 1]} ${mes.year}", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Navy, modifier = Modifier.weight(1f))
-            IconButton(onClick = { mes = mes.plusMonths(1) }) { Icon(Icons.Filled.KeyboardArrowRight, "Mes siguiente") }
+            IconButton(onClick = { mes = mes.plusMonths(1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Mes siguiente") }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onNuevaSesion, modifier = Modifier.weight(1f)) { Text("+ Nueva sesión") }

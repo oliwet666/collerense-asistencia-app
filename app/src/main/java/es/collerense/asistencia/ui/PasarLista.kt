@@ -2,6 +2,8 @@
 
 package es.collerense.asistencia.ui
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -89,7 +89,7 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { if (idx > 0) onSel(lista[idx - 1].uid) }, enabled = idx > 0) { Icon(Icons.Filled.KeyboardArrowLeft, "Anterior") }
+                IconButton(onClick = { if (idx > 0) onSel(lista[idx - 1].uid) }, enabled = idx > 0) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Anterior") }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(fechaCorta(fecha) + " · " + fecha.year, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Navy)
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -98,7 +98,7 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
                     }
                 }
                 IconButton(onClick = { if (idx < lista.size - 1) onSel(lista[idx + 1].uid) }, enabled = idx < lista.size - 1) {
-                    Icon(Icons.Filled.KeyboardArrowRight, "Siguiente")
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Siguiente")
                 }
             }
             if (s.datos.cancelada) {

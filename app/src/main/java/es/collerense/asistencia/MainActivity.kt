@@ -2,6 +2,7 @@
 
 package es.collerense.asistencia
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
@@ -78,7 +78,7 @@ fun App(repo: Repo) {
                     }
                 },
                 navigationIcon = {
-                    if (ficha != null) IconButton(onClick = { ficha = null }) { Icon(Icons.Filled.ArrowBack, "Volver", tint = Color.White) }
+                    if (ficha != null) IconButton(onClick = { ficha = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy, titleContentColor = Color.White)
             )
