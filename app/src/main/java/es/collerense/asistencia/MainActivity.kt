@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package es.collerense.asistencia
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -20,15 +18,12 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,8 +37,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import es.collerense.asistencia.data.Repo
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.unit.dp
+import es.collerense.asistencia.ui.Amarillo
+import es.collerense.asistencia.ui.Escudo
+import es.collerense.asistencia.ui.Fondo
+import es.collerense.asistencia.ui.FondoEquipacion
+import es.collerense.asistencia.ui.GrisTexto
+import es.collerense.asistencia.ui.Morado
+import es.collerense.asistencia.ui.MoradoNeon
+import es.collerense.asistencia.ui.Rojo
+import es.collerense.asistencia.ui.Superficie
 import es.collerense.asistencia.ui.DialogoNuevaSesion
-import es.collerense.asistencia.ui.Navy
 import es.collerense.asistencia.ui.PantallaFicha
 import es.collerense.asistencia.ui.PantallaJugadores
 import es.collerense.asistencia.ui.PantallaPasarLista
@@ -92,29 +104,44 @@ fun App(repo: Repo, archivoEntrante: Uri?, onArchivoUsado: () -> Unit) {
     LaunchedEffect(archivoEntrante) { if (archivoEntrante != null) { tab = 4; ficha = null } }
 
     Scaffold(
+        containerColor = Fondo,
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(if (ficha != null) "Ficha" else titulos[tab], fontWeight = FontWeight.Bold)
-                        if (d.equipo.equipo.isNotEmpty()) Text("${d.equipo.club} · ${d.equipo.equipo}", fontSize = 12.sp, color = Color(0xFFDDE3F2))
+            FondoEquipacion(Modifier.fillMaxWidth()) {
+                Row(Modifier.fillMaxWidth().height(78.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (ficha != null) {
+                        IconButton(onClick = { ficha = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White) }
+                    } else {
+                        Escudo(54)
                     }
-                },
-                navigationIcon = {
-                    if (ficha != null) IconButton(onClick = { ficha = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White) }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy, titleContentColor = Color.White)
-            )
+                    Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                        Text((if (ficha != null) "Ficha" else titulos[tab]).uppercase(), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic,
+                            fontSize = 22.sp, color = Color.White, letterSpacing = 1.sp, maxLines = 1)
+                        Text(
+                            (if (d.equipo.equipo.isNotEmpty()) "${d.equipo.club} · ${d.equipo.equipo}" else "UD Collerense").uppercase(),
+                            fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Amarillo, letterSpacing = 1.5.sp, maxLines = 1
+                        )
+                    }
+                }
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp)
+                    .background(Brush.horizontalGradient(listOf(Morado, Amarillo, Rojo, Amarillo, Morado))))
+            }
         },
         bottomBar = {
-            NavigationBar {
-                titulos.forEachIndexed { i, t ->
-                    NavigationBarItem(
-                        selected = tab == i && ficha == null,
-                        onClick = { tab = i; ficha = null },
-                        icon = { Icon(iconos[i], t) },
-                        label = { Text(t, fontSize = 10.sp, maxLines = 1) }
-                    )
+            Column {
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, MoradoNeon, Color.Transparent))))
+                NavigationBar(containerColor = Superficie, tonalElevation = 0.dp) {
+                    titulos.forEachIndexed { i, t ->
+                        NavigationBarItem(
+                            selected = tab == i && ficha == null,
+                            onClick = { tab = i; ficha = null },
+                            icon = { Icon(iconos[i], t) },
+                            label = { Text(t.uppercase(), fontSize = 9.sp, maxLines = 1, fontWeight = FontWeight.Bold, letterSpacing = .5.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Amarillo, selectedTextColor = Amarillo, indicatorColor = Morado,
+                                unselectedIconColor = GrisTexto, unselectedTextColor = GrisTexto
+                            )
+                        )
+                    }
                 }
             }
         }

@@ -1,6 +1,8 @@
 <resources>
-    <style name="Theme.Collerense" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#27438C</item>
-        <item name="android:windowBackground">#FFFFFF</item>
+    <style name="Theme.Collerense" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#D81B24</item>
+        <item name="android:navigationBarColor">#161026</item>
+        <item name="android:windowBackground">#0B0716</item>
+        <item name="android:colorAccent">#FFD200</item>
     </style>
 </resources>

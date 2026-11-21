@@ -2,6 +2,8 @@
 
 package es.collerense.asistencia.ui
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.background
@@ -85,15 +87,16 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
     Column(Modifier.fillMaxSize()) {
         // ---- cabecera de la sesión ----
         Card(
-            colors = CardDefaults.cardColors(containerColor = if (s.datos.partido) Color(0xFFF6E7D4) else Color(0xFFEEF2FB)),
+            colors = CardDefaults.cardColors(containerColor = Superficie),
+            border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(if (s.datos.partido) Amarillo else MoradoNeon, Borde, if (s.datos.partido) Rojo else Morado))),
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { if (idx > 0) onSel(lista[idx - 1].uid) }, enabled = idx > 0) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Anterior") }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(fechaCorta(fecha) + " · " + fecha.year, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Navy)
+                    Text((fechaCorta(fecha) + " · " + fecha.year).uppercase(), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 20.sp, color = Texto, letterSpacing = .5.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Etiqueta(if (s.datos.partido) "PARTIDO" else "ENTRENO", if (s.datos.partido) Oro else Navy)
+                        Etiqueta(if (s.datos.partido) "PARTIDO" else "ENTRENO", if (s.datos.partido) Amarillo else Morado, if (s.datos.partido) Color(0xFF1A1200) else Color.White)
                         if (s.datos.hora.isNotBlank()) Text("  " + s.datos.hora, fontSize = 12.sp, color = GrisTexto, maxLines = 1)
                     }
                 }
@@ -103,10 +106,10 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
             }
             if (s.datos.cancelada) {
                 Row(
-                    Modifier.fillMaxWidth().background(Color(0xFFE5E7EB)).padding(8.dp),
+                    Modifier.fillMaxWidth().background(Superficie2).padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("✕ CANCELADA: " + s.datos.nota, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = Color(0xFF374151), fontSize = 13.sp)
+                    Text("✕ CANCELADA: " + s.datos.nota, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = RojoNeon, fontSize = 13.sp)
                     OutlinedButton(onClick = { repo.actualizarSesion(s.uid) { it.copy(estado = "", nota = "") } }) { Text("Reactivar") }
                 }
             } else {
@@ -117,7 +120,7 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
                                 .forEach { j -> repo.ponerCodigo(s.uid, j.id, "A") }
                         }, modifier = Modifier.weight(1f)) { Text("Todos asisten", fontSize = 13.sp) }
                     }
-                    OutlinedButton(onClick = { cancelar = true }, modifier = Modifier.weight(1f)) { Text("Cancelar sesión", fontSize = 13.sp, color = Rojo) }
+                    OutlinedButton(onClick = { cancelar = true }, modifier = Modifier.weight(1f)) { Text("Cancelar sesión", fontSize = 13.sp, color = RojoNeon) }
                     OutlinedButton(onClick = onNuevaSesion) { Text("+", fontSize = 16.sp) }
                 }
             }
@@ -141,14 +144,14 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
             items(jugadores, key = { it.id }) { j ->
                 val cod = s.datos.codigo(j.id)
                 val aviso = Calc.invitadoSinEntreno(j, s, d)
-                Column(Modifier.fillMaxWidth().background(if (aviso) Color(0xFFFFE4E6) else Color.Transparent).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                Column(Modifier.fillMaxWidth().background(if (aviso) Rojo.copy(alpha = .16f) else Color.Transparent).padding(horizontal = 10.dp, vertical = 4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(j.datos.dorsal.ifEmpty { "–" }, modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = Navy)
+                        Text(j.datos.dorsal.ifEmpty { "–" }, modifier = Modifier.width(30.dp), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 16.sp, color = Amarillo)
                         Text(
                             j.datos.nombre, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, modifier = Modifier.weight(1f), maxLines = 1,
                             fontStyle = if (j.datos.invitado) FontStyle.Italic else FontStyle.Normal
                         )
-                        if (j.datos.invitado) Etiqueta("INV", Oro)
+                        if (j.datos.invitado) Etiqueta("INV", Naranja, Color(0xFF1A0A00))
                         if (cod.isNotEmpty()) {
                             Spacer(Modifier.width(6.dp))
                             Text(significado(cod, s.datos.partido), fontSize = 11.sp, color = GrisTexto, maxLines = 1)
@@ -156,18 +159,18 @@ fun PantallaPasarLista(repo: Repo, uidSel: String?, onSel: (String) -> Unit, onN
                     }
                     if (aviso) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Warning, null, tint = Rojo, modifier = Modifier.padding(end = 4.dp))
-                            Text("Invitado sin entreno apuntado esta semana", color = Rojo, fontSize = 11.sp)
+                            Icon(Icons.Filled.Warning, null, tint = RojoNeon, modifier = Modifier.padding(end = 4.dp))
+                            Text("Invitado sin entreno apuntado esta semana", color = RojoNeon, fontSize = 11.sp)
                         }
                     }
-                    Row(Modifier.horizontalScroll(rememberScrollState()).clip(RoundedCornerShape(8.dp))) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()).clip(RoundedCornerShape(2.dp))) {
                         val codigos = if (s.datos.partido) CODIGOS_PARTIDO else CODIGOS_ENTRENO
                         codigos.forEach { c ->
                             ChipCodigo(c, cod == c, onClick = { if (!s.datos.cancelada) repo.ponerCodigo(s.uid, j.id, c) }, ancho = if (s.datos.partido) 46 else 54)
                         }
                     }
                 }
-                HorizontalDivider(color = Color(0xFFEEEEEE))
+                HorizontalDivider(color = Borde)
             }
             item { Espacio(80) }
         }

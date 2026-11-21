@@ -2,6 +2,7 @@
 
 package es.collerense.asistencia.ui
 
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.background
@@ -63,7 +64,7 @@ fun PantallaSesiones(repo: Repo, onAbrir: (String) -> Unit, onNuevaSesion: () ->
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { mes = mes.minusMonths(1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Mes anterior") }
-            Text("${MESES[mes.monthValue - 1]} ${mes.year}", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Navy, modifier = Modifier.weight(1f))
+            Text("${MESES[mes.monthValue - 1]} ${mes.year}", fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 20.sp, color = Texto, modifier = Modifier.weight(1f))
             IconButton(onClick = { mes = mes.plusMonths(1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Mes siguiente") }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -79,7 +80,7 @@ fun PantallaSesiones(repo: Repo, onAbrir: (String) -> Unit, onNuevaSesion: () ->
                 FilaSesion(s, onClick = { onAbrir(s.uid) },
                     onCancelar = { if (s.datos.cancelada) repo.actualizarSesion(s.uid) { it.copy(estado = "", nota = "") } else cancelarUid = s.uid },
                     onBorrar = { borrarUid = s.uid })
-                HorizontalDivider(color = Color(0xFFEEEEEE))
+                HorizontalDivider(color = Borde)
             }
             item { Espacio(80) }
         }
@@ -105,23 +106,23 @@ private fun FilaSesion(s: Sesion, onClick: () -> Unit, onCancelar: () -> Unit, o
     val f = s.datos.localDate
     Row(
         Modifier.fillMaxWidth().clickable { onClick() }
-            .background(if (s.datos.cancelada) Color(0xFFF3F4F6) else Color.Transparent)
+            .background(if (s.datos.cancelada) Superficie else Color.Transparent)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.width(70.dp)) {
-            Text(fechaCorta(f), fontWeight = FontWeight.Bold, color = if (f == LocalDate.now()) Rojo else Navy)
+            Text(fechaCorta(f).uppercase(), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, color = if (f == LocalDate.now()) Amarillo else Texto)
         }
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Etiqueta(if (s.datos.partido) "PARTIDO" else "ENTRENO", if (s.datos.partido) Oro else Navy)
-                if (s.datos.cancelada) { Text("  "); Etiqueta("CANCELADA", Color(0xFF6B7280)) }
+                Etiqueta(if (s.datos.partido) "PARTIDO" else "ENTRENO", if (s.datos.partido) Amarillo else Morado, if (s.datos.partido) Color(0xFF1A1200) else Color.White)
+                if (s.datos.cancelada) { Text("  "); Etiqueta("CANCELADA", Rojo.copy(alpha = .35f), RojoNeon) }
                 if (s.modificada) { Text("  "); Etiqueta("•", Rojo) }
             }
             val sub = listOf(s.datos.hora, s.datos.nota, s.datos.resultado).filter { it.isNotBlank() }.joinToString(" · ")
             if (sub.isNotEmpty()) Text(sub, fontSize = 12.sp, color = GrisTexto, maxLines = 2)
         }
-        Text("${s.datos.registros.size}", fontWeight = FontWeight.Bold, color = if (s.datos.registros.isEmpty()) GrisTexto else Color(0xFF15803D))
+        Text("${s.datos.registros.size}", fontWeight = FontWeight.Bold, color = if (s.datos.registros.isEmpty()) GrisTexto else Verde)
         Box {
             IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Opciones") }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {

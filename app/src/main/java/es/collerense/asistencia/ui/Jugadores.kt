@@ -2,6 +2,11 @@
 
 package es.collerense.asistencia.ui
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.border
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,9 +68,12 @@ import java.time.Period
 @Composable
 fun FotoJugador(repo: Repo, j: Jugador, tam: Int) {
     val bmp = remember(j.foto) { repo.fotoBitmap(j) }
-    Box(Modifier.size(tam.dp).clip(if (tam < 60) CircleShape else RoundedCornerShape(10.dp)).background(GrisClaro), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(tam.dp).clip(if (tam < 60) CircleShape else CutCornerShape(topEnd = 16.dp, bottomStart = 16.dp))
+        .background(Brush.linearGradient(listOf(Morado, Superficie2)))
+        .border(BorderStroke(if (tam < 60) 1.5.dp else 2.dp, Brush.linearGradient(listOf(Amarillo, Rojo))), if (tam < 60) CircleShape else CutCornerShape(topEnd = 16.dp, bottomStart = 16.dp)),
+        contentAlignment = Alignment.Center) {
         if (bmp != null) Image(bmp.asImageBitmap(), null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        else Text(j.datos.nombre.take(1), fontWeight = FontWeight.Bold, color = GrisTexto, fontSize = (tam / 2.5).sp)
+        else Text(j.datos.nombre.take(1), fontWeight = FontWeight.Black, color = Texto, fontSize = (tam / 2.5).sp)
     }
 }
 
@@ -86,23 +94,23 @@ fun PantallaJugadores(repo: Repo, onFicha: (Int) -> Unit) {
                 val st = Calc.stats(j, d)
                 Row(Modifier.fillMaxWidth().clickable { onFicha(j.id) }.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     FotoJugador(repo, j, 44)
-                    Text(j.datos.dorsal.ifEmpty { "–" }, modifier = Modifier.width(34.dp).padding(start = 8.dp), fontWeight = FontWeight.Bold, color = Navy)
+                    Text(j.datos.dorsal.ifEmpty { "–" }, modifier = Modifier.width(38.dp).padding(start = 8.dp), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 17.sp, color = Amarillo)
                     Column(Modifier.weight(1f)) {
-                        Text(j.datos.nombre, fontWeight = FontWeight.SemiBold, maxLines = 1, color = if (est == "Baja") GrisTexto else Color.Black)
+                        Text(j.datos.nombre, fontWeight = FontWeight.SemiBold, maxLines = 1, color = if (est == "Baja") GrisTexto else Texto)
                         Row {
                             when (est) {
                                 "Baja" -> Etiqueta("BAJA", Rojo)
-                                "Invitado" -> Etiqueta("INVITADO", Oro)
+                                "Invitado" -> Etiqueta("INVITADO", Naranja, Color(0xFF1A0A00))
                                 "Próxima alta" -> Etiqueta("PRÓX. ALTA", Morado)
                                 else -> {}
                             }
                             if (j.modificado) { Text(" "); Etiqueta("•", Rojo) }
                         }
                     }
-                    Text(st.pct?.let { "${(it * 100).toInt()}%" } ?: "", fontWeight = FontWeight.Bold,
-                        color = if ((st.pct ?: 1.0) < d.equipo.umbral) Rojo else Navy)
+                    Text(st.pct?.let { "${(it * 100).toInt()}%" } ?: "", fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 16.sp,
+                        color = if ((st.pct ?: 1.0) < d.equipo.umbral) RojoNeon else Verde)
                 }
-                HorizontalDivider(color = Color(0xFFEEEEEE))
+                HorizontalDivider(color = Borde)
             }
             item { Espacio(80) }
         }
@@ -173,20 +181,26 @@ fun PantallaFicha(repo: Repo, id: Int, onVolver: () -> Unit) {
         }
     }
     val st = Calc.stats(j, d)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.clickable { fotoMenu = true }) { FotoJugador(repo, j, 96) }
-            Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(j.datos.nombre, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Navy)
-                Text("Dorsal ${j.datos.dorsal.ifEmpty { "–" }} · ${j.estado(hoy)}" + if (j.datos.invitado) " (invitado)" else "", color = GrisTexto)
-                parseFecha(j.datos.nacimiento)?.let { Text("${Period.between(it, hoy).years} años · ${fechaLarga(it)}", color = GrisTexto, fontSize = 13.sp) }
-                if (j.datos.obs.isNotBlank()) Text(j.datos.obs, fontSize = 12.sp, color = GrisTexto)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+      FondoEquipacion(Modifier.fillMaxWidth()) {
+        // dorsal gigante de fondo, como en la camiseta
+        Text(j.datos.dorsal, fontSize = 130.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, color = Color.White.copy(alpha = .16f),
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp), maxLines = 1)
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.clickable { fotoMenu = true }) { FotoJugador(repo, j, 104) }
+            Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                Text(j.datos.nombre.uppercase(), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 21.sp, color = Color.White, lineHeight = 23.sp)
+                Text("#${j.datos.dorsal.ifEmpty { "–" }} · ${j.estado(hoy)}" + if (j.datos.invitado) " (invitado)" else "", color = Amarillo, fontWeight = FontWeight.Bold)
+                parseFecha(j.datos.nacimiento)?.let { Text("${Period.between(it, hoy).years} años · ${fechaLarga(it)}", color = Color.White.copy(alpha = .85f), fontSize = 13.sp) }
+                if (j.datos.obs.isNotBlank()) Text(j.datos.obs, fontSize = 12.sp, color = Color.White.copy(alpha = .8f))
             }
         }
+      }
+      Column(Modifier.padding(12.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             OutlinedButton(onClick = { editar = true }, modifier = Modifier.weight(1f)) { Text("Editar") }
             OutlinedButton(onClick = { fotoMenu = true }, modifier = Modifier.weight(1f)) { Text("Foto") }
-            OutlinedButton(onClick = { baja = true }, modifier = Modifier.weight(1f)) { Text(if (j.datos.baja != null) "Reactivar" else "Baja", color = Rojo) }
+            OutlinedButton(onClick = { baja = true }, modifier = Modifier.weight(1f)) { Text(if (j.datos.baja != null) "Reactivar" else "Baja", color = RojoNeon) }
         }
         FilaSimple("Alta", parseFecha(j.datos.alta)?.let { fechaLarga(it) } ?: "inicio de temporada")
         if (j.datos.baja != null) FilaSimple("Baja", (parseFecha(j.datos.baja)?.let { fechaLarga(it) } ?: "") + if (j.datos.motivo.isNotBlank()) " · ${j.datos.motivo}" else "")
@@ -194,14 +208,14 @@ fun PantallaFicha(repo: Repo, id: Int, onVolver: () -> Unit) {
         Seccion("Entrenamientos")
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Tile("% ASIST.", if (j.datos.invitado) "Inv." else st.pct?.let { "${(it * 100).toInt()}%" } ?: "–",
-                if ((st.pct ?: 1.0) < d.equipo.umbral) Rojo else Color(0xFF15803D), Modifier.weight(1f))
+                if ((st.pct ?: 1.0) < d.equipo.umbral) RojoNeon else Verde, Modifier.weight(1f))
             Tile("ASISTENCIAS", if (j.datos.invitado) "${st.asistencias}" else "${st.asistencias}/${st.asistencias + st.f}", Navy, Modifier.weight(1f))
-            Tile("FALTAS", "${st.f}", Color(0xFF9C0006), Modifier.weight(1f))
+            Tile("FALTAS", "${st.f}", RojoNeon, Modifier.weight(1f))
         }
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Tile("JUSTIF.", "${st.j}", Morado, Modifier.weight(1f))
-            Tile("LESIONADO", "${st.l}", Color(0xFF1F4E78), Modifier.weight(1f))
-            Tile("RETRASOS", "${st.r}", Color(0xFF9C5700), Modifier.weight(1f))
+            Tile("JUSTIF.", "${st.j}", MoradoNeon, Modifier.weight(1f))
+            Tile("LESIONADO", "${st.l}", Celeste, Modifier.weight(1f))
+            Tile("RETRASOS", "${st.r}", Amarillo, Modifier.weight(1f))
         }
         Seccion("Partidos")
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -212,7 +226,7 @@ fun PantallaFicha(repo: Repo, id: Int, onVolver: () -> Unit) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Tile("% MINUTOS", st.pctMin?.let { "${(it * 100).toInt()}%" } ?: "–", Oro, Modifier.weight(1f))
             Tile("MEDIA ¼", st.mediaCuartos?.let { "%.1f".format(it) } ?: "–", Oro, Modifier.weight(1f))
-            Tile("NO CONV.", "${st.nc}", Color(0xFF4B5563), Modifier.weight(1f))
+            Tile("NO CONV.", "${st.nc}", GrisTexto, Modifier.weight(1f))
         }
         Seccion("Últimas sesiones")
         Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
@@ -222,14 +236,14 @@ fun PantallaFicha(repo: Repo, id: Int, onVolver: () -> Unit) {
                 Column(Modifier.weight(1f).padding(1.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(fechaCorta(s.datos.localDate).substringAfter(' ') + if (s.datos.partido) "P" else "", fontSize = 9.sp, color = GrisTexto)
                     Text(c.ifEmpty { "–" }, color = fg, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(bg).padding(vertical = 6.dp))
+                        modifier = Modifier.fillMaxWidth().clip(CorteDiagonal).background(bg).padding(vertical = 6.dp))
                 }
             }
         }
         Seccion("Por meses")
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             listOf("Mes" to 1.4f, "Entr." to 1f, "Asis." to 1f, "Falt." to 1f, "%" to 1f, "Part." to 1f, "¼" to 1f).forEach { (t, w) ->
-                Text(t, Modifier.weight(w), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Navy, textAlign = TextAlign.Center)
+                Text(t, Modifier.weight(w), fontSize = 11.sp, fontWeight = FontWeight.Black, color = Amarillo, textAlign = TextAlign.Center)
             }
         }
         Calc.meses(d).forEach { m ->
@@ -244,6 +258,7 @@ fun PantallaFicha(repo: Repo, id: Int, onVolver: () -> Unit) {
         }
         Espacio(40)
         TextButton(onClick = onVolver) { Text("‹ Volver") }
+      }
     }
     if (editar) DialogoJugador(repo, id, j.datos, onCerrar = { editar = false }, onGuardado = { editar = false })
     if (fotoMenu) {

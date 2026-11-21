@@ -3,6 +3,18 @@
 package es.collerense.asistencia.ui
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.material3.Shapes
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import es.collerense.asistencia.R
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -28,7 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,34 +57,54 @@ import androidx.compose.ui.unit.sp
 import es.collerense.asistencia.data.fechaLarga
 import java.time.LocalDate
 
-val Navy = Color(0xFF27438C)
-val Rojo = Color(0xFFEE252D)
-val Morado = Color(0xFF49298E)
-val Oro = Color(0xFFB37D41)
-val Amarillo = Color(0xFFFDE926)
-val GrisClaro = Color(0xFFF3F4F6)
-val GrisTexto = Color(0xFF6B7280)
+// ── Paleta corporativa (escudo y equipación): rojo, morado, amarillo, sobre fondo oscuro ──
+val Fondo = Color(0xFF0B0716)
+val Superficie = Color(0xFF161026)
+val Superficie2 = Color(0xFF221839)
+val Borde = Color(0xFF33265A)
+val Texto = Color(0xFFF4F0FF)
+val Rojo = Color(0xFFE8202A)
+val RojoNeon = Color(0xFFFF4552)
+val Morado = Color(0xFF6A2C91)
+val MoradoNeon = Color(0xFFB27BFF)
+val Amarillo = Color(0xFFFFD200)
+val Naranja = Color(0xFFE58A3A)
+val Verde = Color(0xFF3BE37F)
+val Celeste = Color(0xFF5CC8FF)
+/** Acento para textos destacados (nombres, fechas, cifras). */
+val Navy = MoradoNeon
+val Oro = Naranja
+val GrisClaro = Superficie2
+val GrisTexto = Color(0xFFA99DC9)
 
-val EsquemaColores = lightColorScheme(
-    primary = Navy, onPrimary = Color.White,
-    secondary = Rojo, onSecondary = Color.White,
-    tertiary = Oro, surface = Color.White, background = Color.White
+val EsquemaColores = darkColorScheme(
+    primary = Rojo, onPrimary = Color.White,
+    primaryContainer = Morado, onPrimaryContainer = Color.White,
+    secondary = Amarillo, onSecondary = Color(0xFF1A1200),
+    tertiary = MoradoNeon, onTertiary = Color(0xFF14002E),
+    background = Fondo, onBackground = Texto,
+    surface = Superficie, onSurface = Texto,
+    surfaceVariant = Superficie2, onSurfaceVariant = GrisTexto,
+    surfaceContainer = Superficie, surfaceContainerHigh = Superficie2, surfaceContainerHighest = Superficie2,
+    surfaceContainerLow = Superficie, surfaceContainerLowest = Fondo,
+    secondaryContainer = Morado, onSecondaryContainer = Amarillo,
+    outline = Borde, outlineVariant = Borde, error = RojoNeon
 )
 
-/** Colores de cada código (relleno, texto), iguales que en el Excel. */
+/** Colores de cada código (relleno, texto): mismos significados que en el Excel, en versión neón. */
 fun colorCodigo(c: String): Pair<Color, Color> = when (c) {
-    "A" -> Color(0xFFC6EFCE) to Color(0xFF006100)
-    "L" -> Color(0xFFDDEBF7) to Color(0xFF1F4E78)
-    "R" -> Color(0xFFFFEB9C) to Color(0xFF9C5700)
-    "F" -> Color(0xFFFFC7CE) to Color(0xFF9C0006)
-    "J" -> Color(0xFFE4DFEC) to Color(0xFF5B3F86)
-    "NC" -> Color(0xFF7F7F7F) to Color.White
-    "0" -> Color(0xFFEDEDED) to Color(0xFF404040)
-    "1" -> Color(0xFFDCE3F2) to Color(0xFF1F2F5C)
-    "2" -> Color(0xFFB4C3E6) to Color(0xFF1F2F5C)
-    "3" -> Color(0xFF7A95CF) to Color.White
-    "4" -> Navy to Color.White
-    else -> GrisClaro to GrisTexto
+    "A" -> Verde to Color(0xFF03180B)
+    "L" -> Celeste to Color(0xFF021826)
+    "R" -> Amarillo to Color(0xFF1A1200)
+    "F" -> RojoNeon to Color.White
+    "J" -> MoradoNeon to Color(0xFF14002E)
+    "NC" -> Color(0xFF5B5570) to Color.White
+    "0" -> Color(0xFF3A3152) to Color.White
+    "1" -> Color(0xFF4A2B80) to Color.White
+    "2" -> Color(0xFF6A35B8) to Color.White
+    "3" -> Color(0xFF9A3FD0) to Color.White
+    "4" -> Rojo to Color.White
+    else -> Superficie2 to GrisTexto
 }
 
 @Composable
@@ -82,32 +114,35 @@ fun ChipCodigo(codigo: String, seleccionado: Boolean, onClick: () -> Unit, ancho
         modifier = Modifier
             .padding(2.dp)
             .size(width = ancho.dp, height = 38.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (seleccionado) bg else Color.White)
-            .border(BorderStroke(if (seleccionado) 2.dp else 1.dp, if (seleccionado) fg else Color(0xFFD1D5DB)), RoundedCornerShape(8.dp))
+            .clip(CorteDiagonal)
+            .background(if (seleccionado) bg else Superficie2)
+            .border(BorderStroke(if (seleccionado) 2.dp else 1.dp, if (seleccionado) Color.White.copy(alpha = .85f) else Borde), CorteDiagonal)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(codigo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = if (seleccionado) fg else GrisTexto)
+        Text(codigo, fontWeight = FontWeight.Black, fontSize = 15.sp, color = if (seleccionado) fg else GrisTexto)
     }
 }
 
 @Composable
 fun Etiqueta(texto: String, bg: Color, fg: Color = Color.White) {
     Text(
-        texto, color = fg, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(bg).padding(horizontal = 6.dp, vertical = 2.dp)
+        texto, color = fg, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp, fontStyle = FontStyle.Italic,
+        modifier = Modifier.clip(CorteDiagonal).background(bg).padding(horizontal = 8.dp, vertical = 2.dp)
     )
 }
 
 @Composable
 fun Tile(titulo: String, valor: String, color: Color = Navy, modifier: Modifier = Modifier) {
     Column(
-        modifier.clip(RoundedCornerShape(10.dp)).background(GrisClaro).padding(8.dp),
+        modifier.clip(CorteDiagonal)
+            .background(Brush.verticalGradient(listOf(Superficie2, Superficie)))
+            .border(BorderStroke(1.dp, Brush.horizontalGradient(listOf(color.copy(alpha = .9f), Borde))), CorteDiagonal)
+            .padding(horizontal = 6.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(titulo, fontSize = 10.sp, color = GrisTexto, textAlign = TextAlign.Center, maxLines = 1)
-        Text(valor, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
+        Text(titulo, fontSize = 9.sp, color = GrisTexto, textAlign = TextAlign.Center, maxLines = 1, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+        Text(valor, fontSize = 24.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, color = color, maxLines = 1)
     }
 }
 
@@ -180,10 +215,14 @@ fun DialogoCancelar(motivos: List<String>, titulo: String, onCancelar: (String) 
 
 @Composable
 fun Seccion(texto: String) {
-    Text(
-        texto.uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp,
-        modifier = Modifier.fillMaxWidth().padding(top = 10.dp).clip(RoundedCornerShape(6.dp)).background(Navy).padding(horizontal = 10.dp, vertical = 5.dp)
-    )
+    Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(width = 5.dp, height = 18.dp).background(Brush.verticalGradient(listOf(Amarillo, Rojo))))
+        Text(
+            texto.uppercase(), color = Texto, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 13.sp, letterSpacing = 1.5.sp,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+        Box(Modifier.padding(start = 10.dp).weight(1f).height(1.dp).background(Brush.horizontalGradient(listOf(MoradoNeon, Color.Transparent))))
+    }
 }
 
 @Composable
@@ -193,9 +232,79 @@ fun Espacio(h: Int = 8) = Box(Modifier.height(h.dp))
 fun FilaSimple(izq: String, der: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(izq, color = GrisTexto, fontSize = 13.sp)
-        Text(der, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Text(der, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Texto)
     }
 }
 
 @Composable
-fun Tema(content: @Composable () -> Unit) = MaterialTheme(colorScheme = EsquemaColores, content = content)
+fun Tema(content: @Composable () -> Unit) = MaterialTheme(colorScheme = EsquemaColores, shapes = Formas, content = content)
+
+/** Esquina recortada en diagonal: aspecto deportivo/futurista. */
+val CorteDiagonal = CutCornerShape(topStart = 0.dp, topEnd = 10.dp, bottomEnd = 0.dp, bottomStart = 10.dp)
+val Formas = Shapes(
+    extraSmall = CutCornerShape(4.dp), small = CutCornerShape(6.dp), medium = CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp),
+    large = CutCornerShape(topEnd = 18.dp, bottomStart = 18.dp), extraLarge = CutCornerShape(topEnd = 22.dp, bottomStart = 22.dp)
+)
+
+/** Escudo del club. */
+@Composable
+fun Escudo(alto: Int, modifier: Modifier = Modifier) =
+    Image(painterResource(R.drawable.escudo), "Escudo UD Collerense", modifier.height(alto.dp), contentScale = ContentScale.Fit)
+
+/** Franjas "goteadas" como las de la equipación: morado a la izquierda, amarillo a la derecha (patrón fijo). */
+@Composable
+fun FranjasEquipacion(modifier: Modifier = Modifier, alpha: Float = 1f) {
+    Canvas(modifier) {
+        val rnd = java.util.Random(1967)
+        val n = 46
+        for (i in 0 until n) {
+            val t = i / (n - 1f)
+            val x = size.width * (0.02f + 0.96f * t) + (rnd.nextFloat() - .5f) * 10f
+            val ancho = 2f + rnd.nextFloat() * (if (t < .35f) 9f else 6f)
+            val largo = size.height * (0.25f + rnd.nextFloat() * (if (t < .35f) .75f else .6f))
+            val color = when {
+                t < .38f -> Morado
+                t < .5f -> if (rnd.nextBoolean()) Morado else Amarillo
+                else -> Amarillo
+            }
+            drawLine(color.copy(alpha = alpha * (0.55f + rnd.nextFloat() * .45f)), Offset(x, -4f), Offset(x - largo * .08f, largo), ancho, StrokeCap.Round)
+            if (rnd.nextFloat() < .35f) drawCircle(color.copy(alpha = alpha * .8f), ancho * .6f, Offset(x - largo * .1f, largo + ancho * 2.2f))
+        }
+    }
+}
+
+/** Fondo rojo de la equipación con las franjas encima. */
+@Composable
+fun FondoEquipacion(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+    Box(modifier.background(Brush.verticalGradient(listOf(Color(0xFFF0242E), Color(0xFFB5101A))))) {
+        FranjasEquipacion(Modifier.matchParentSize(), alpha = .9f)
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0x55000000)))))
+        content()
+    }
+}
+
+/** Botón principal: degradado rojo→morado con esquinas cortadas. */
+@Composable
+fun BotonNeon(texto: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val forma = CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp)
+    Box(
+        modifier.height(52.dp).clip(forma)
+            .background(if (enabled) Brush.horizontalGradient(listOf(Rojo, Color(0xFFB0186E), Morado)) else Brush.horizontalGradient(listOf(Superficie2, Superficie2)))
+            .border(BorderStroke(1.dp, if (enabled) Amarillo.copy(alpha = .7f) else Borde), forma)
+            .clickable(enabled = enabled) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(texto.uppercase(), color = if (enabled) Color.White else GrisTexto, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic,
+            letterSpacing = 1.2.sp, fontSize = 15.sp)
+    }
+}
+
+/** Tarjeta oscura con borde degradado. */
+@Composable
+fun Panel(modifier: Modifier = Modifier, acento: Color = MoradoNeon, content: @Composable () -> Unit) {
+    val forma = CutCornerShape(topEnd = 16.dp, bottomStart = 16.dp)
+    Box(
+        modifier.clip(forma).background(Brush.linearGradient(listOf(Superficie2, Superficie)))
+            .border(BorderStroke(1.dp, Brush.linearGradient(listOf(acento, Borde, Borde))), forma)
+    ) { content() }
+}

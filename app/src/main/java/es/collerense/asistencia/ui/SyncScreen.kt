@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +77,8 @@ fun PantallaSync(repo: Repo, archivoEntrante: Uri? = null, onArchivoUsado: () ->
             }
         }
     }
-    val abrir = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    // GetContent: además de los proveedores de documentos lista apps como OneDrive ("Explorar en otras apps")
+    val abrir = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) importar(uri)
     }
     LaunchedEffect(archivoEntrante) {
@@ -100,10 +101,16 @@ fun PantallaSync(repo: Repo, archivoEntrante: Uri? = null, onArchivoUsado: () ->
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-        Text("Sincronizar con el Excel", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Navy)
-        Espacio()
-        Card(colors = CardDefaults.cardColors(containerColor = GrisClaro), modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Escudo(64)
+            Column(Modifier.padding(start = 12.dp)) {
+                Text("SINCRONIZAR", fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 26.sp, color = Texto, letterSpacing = 1.sp)
+                Text("Excel del PC  ⇄  móvil", color = Amarillo, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
+        }
+        Espacio(12)
+        Panel(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(14.dp)) {
                 FilaSimple("Equipo", "${d.equipo.equipo} ${d.equipo.temporada}".ifBlank { "—" })
                 FilaSimple("Último Excel importado", d.origen.ifEmpty { "ninguno" })
                 FilaSimple("Fecha de importación", d.importado.replace('T', ' ').ifEmpty { "—" })
@@ -116,32 +123,29 @@ fun PantallaSync(repo: Repo, archivoEntrante: Uri? = null, onArchivoUsado: () ->
         Text("Guarda el Excel en OneDrive o Drive y ábrelo aquí. Se cargan jugadores (con fotos), sesiones, horarios y asistencia.\n" +
             "Si OneDrive no sale en la lista: en la app de OneDrive, mantén pulsado el Excel › Compartir (o Abrir con) › Asistencia Colle.",
             fontSize = 13.sp, color = GrisTexto, modifier = Modifier.padding(vertical = 6.dp))
-        Button(onClick = { if (d.pendientes > 0) confirmarImport = true else abrir.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth(), enabled = !trabajando) {
-            Text("Importar Excel (.xlsm)")
-        }
+        BotonNeon("Importar Excel (.xlsm)", onClick = { if (d.pendientes > 0) confirmarImport = true else abrir.launch("*/*") },
+            modifier = Modifier.fillMaxWidth(), enabled = !trabajando)
         Espacio(16)
         Seccion("2 · Móvil → PC")
         Text("Crea un archivo .colle con lo que has cambiado en el móvil. Guárdalo en OneDrive o Drive y en el Excel pulsa IMPORTAR DEL MÓVIL.",
             fontSize = 13.sp, color = GrisTexto, modifier = Modifier.padding(vertical = 6.dp))
-        Button(onClick = {
+        BotonNeon("Exportar cambios (${d.pendientes})", onClick = {
             val ex = Sync.exportar(repo)
             if (ex.cambios == 0) aviso = "Nada que exportar" to "No hay cambios desde la última importación o exportación."
             else { pendiente = ex; guardar.launch(ex.nombreArchivo) }
-        }, modifier = Modifier.fillMaxWidth(), enabled = !trabajando && d.origen.isNotEmpty()) {
-            Text("Exportar cambios (${d.pendientes})")
-        }
-        if (trabajando) { Espacio(); CircularProgressIndicator() }
+        }, modifier = Modifier.fillMaxWidth(), enabled = !trabajando && d.origen.isNotEmpty())
+        if (trabajando) { Espacio(); CircularProgressIndicator(color = Amarillo) }
         Espacio(24)
         Text("Consejo: exporta tus cambios y que el PC los importe antes de volver a importar el Excel en el móvil; " +
             "si no, lo que hayas hecho en el móvil se sustituye por lo del Excel.", fontSize = 12.sp, color = GrisTexto)
         Espacio(16)
-        Text("© Oliver Gutiérrez · UD Collerense", fontSize = 11.sp, color = Color(0xFF9CA3AF))
+        Text("© Oliver Gutiérrez · UD Collerense · Illa de Mallorca", fontSize = 11.sp, color = GrisTexto)
     }
 
     if (confirmarImport) {
         Confirmar("Cambios sin exportar",
             "Tienes ${d.pendientes} cambios sin exportar. Si importas el Excel ahora se perderán.\n\n¿Importar igualmente?",
-            si = "Importar", onSi = { confirmarImport = false; abrir.launch(arrayOf("*/*")) }, onNo = { confirmarImport = false })
+            si = "Importar", onSi = { confirmarImport = false; abrir.launch("*/*") }, onNo = { confirmarImport = false })
     }
     porImportar?.let { u ->
         Confirmar("Cambios sin exportar",
