@@ -3,6 +3,9 @@
 package es.collerense.asistencia
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -27,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,15 +53,33 @@ import es.collerense.asistencia.ui.PantallaSync
 import es.collerense.asistencia.ui.Tema
 
 class MainActivity : ComponentActivity() {
+    private val entrante = mutableStateOf<Uri?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val repo = Repo(applicationContext)
-        setContent { Tema { App(repo) } }
+        if (savedInstanceState == null) entrante.value = uriDe(intent)
+        setContent { Tema { App(repo, entrante.value) { entrante.value = null } } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        uriDe(intent)?.let { entrante.value = it }
+    }
+
+    /** Archivo recibido con "Abrir con" (VIEW) o "Compartir" (SEND), p. ej. desde OneDrive. */
+    private fun uriDe(i: Intent?): Uri? = when (i?.action) {
+        Intent.ACTION_VIEW -> i.data
+        Intent.ACTION_SEND ->
+            (if (Build.VERSION.SDK_INT >= 33) i.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+             else @Suppress("DEPRECATION") i.getParcelableExtra(Intent.EXTRA_STREAM)) ?: i.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+        else -> null
     }
 }
 
 @Composable
-fun App(repo: Repo) {
+fun App(repo: Repo, archivoEntrante: Uri?, onArchivoUsado: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(if (repo.data.origen.isEmpty()) 4 else 0) }
     var ficha by rememberSaveable { mutableStateOf<Int?>(null) }
     var sesionSel by rememberSaveable { mutableStateOf<String?>(null) }
@@ -67,6 +89,7 @@ fun App(repo: Repo) {
     val d = repo.data
 
     BackHandler(enabled = ficha != null) { ficha = null }
+    LaunchedEffect(archivoEntrante) { if (archivoEntrante != null) { tab = 4; ficha = null } }
 
     Scaffold(
         topBar = {
@@ -105,7 +128,7 @@ fun App(repo: Repo) {
                 1 -> PantallaSesiones(repo, onAbrir = { sesionSel = it; tab = 0 }, onNuevaSesion = { nuevaSesion = true })
                 2 -> PantallaJugadores(repo, onFicha = { ficha = it })
                 3 -> PantallaResumen(repo, onFicha = { ficha = it })
-                else -> PantallaSync(repo)
+                else -> PantallaSync(repo, archivoEntrante, onArchivoUsado)
             }
         }
     }

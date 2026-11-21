@@ -16,6 +16,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PantallaSync(repo: Repo) {
+fun PantallaSync(repo: Repo, archivoEntrante: Uri? = null, onArchivoUsado: () -> Unit = {}) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val d = repo.data
@@ -51,8 +52,10 @@ fun PantallaSync(repo: Repo) {
         } ?: "Excel"
     } catch (e: Exception) { "Excel" }
 
-    val abrir = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
+    var porImportar by remember { mutableStateOf<Uri?>(null) }
+
+    fun importar(uri: Uri) {
+        run {
             trabajando = true
             scope.launch {
                 val res: Result<LecturaExcel> = withContext(Dispatchers.IO) {
@@ -73,6 +76,14 @@ fun PantallaSync(repo: Repo) {
                 )
             }
         }
+    }
+    val abrir = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) importar(uri)
+    }
+    LaunchedEffect(archivoEntrante) {
+        val u = archivoEntrante ?: return@LaunchedEffect
+        onArchivoUsado()
+        if (d.pendientes > 0) porImportar = u else importar(u)
     }
     val guardar = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         val ex = pendiente
@@ -102,7 +113,8 @@ fun PantallaSync(repo: Repo) {
         }
         Espacio(16)
         Seccion("1 · PC → móvil")
-        Text("Guarda el Excel en OneDrive o Drive y ábrelo aquí. Se cargan jugadores (con fotos), sesiones, horarios y asistencia.",
+        Text("Guarda el Excel en OneDrive o Drive y ábrelo aquí. Se cargan jugadores (con fotos), sesiones, horarios y asistencia.\n" +
+            "Si OneDrive no sale en la lista: en la app de OneDrive, mantén pulsado el Excel › Compartir (o Abrir con) › Asistencia Colle.",
             fontSize = 13.sp, color = GrisTexto, modifier = Modifier.padding(vertical = 6.dp))
         Button(onClick = { if (d.pendientes > 0) confirmarImport = true else abrir.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth(), enabled = !trabajando) {
             Text("Importar Excel (.xlsm)")
@@ -130,6 +142,11 @@ fun PantallaSync(repo: Repo) {
         Confirmar("Cambios sin exportar",
             "Tienes ${d.pendientes} cambios sin exportar. Si importas el Excel ahora se perderán.\n\n¿Importar igualmente?",
             si = "Importar", onSi = { confirmarImport = false; abrir.launch(arrayOf("*/*")) }, onNo = { confirmarImport = false })
+    }
+    porImportar?.let { u ->
+        Confirmar("Cambios sin exportar",
+            "Tienes ${d.pendientes} cambios sin exportar. Si importas este Excel se perderán.\n\n¿Importar igualmente?",
+            si = "Importar", onSi = { porImportar = null; importar(u) }, onNo = { porImportar = null })
     }
     aviso?.let { (t, m) -> Aviso(t, m) { aviso = null } }
 }
